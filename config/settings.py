@@ -32,6 +32,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'rest_framework',
     'accounts.apps.AccountsConfig',
     'music.apps.MusicConfig',
     'community.apps.CommunityConfig',
