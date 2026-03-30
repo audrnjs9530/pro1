@@ -1,0 +1,220 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    .auth-wrap {
+        min-height: calc(100vh - 64px - 8rem);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 3rem 1rem;
+    }
+    .auth-card {
+        width: 100%;
+        max-width: 460px;
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 24px;
+        padding: 2.8rem 2.5rem;
+        animation: slideUp 0.5s ease;
+    }
+    @keyframes slideUp {
+        from { opacity: 0; transform: translateY(30px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+    .auth-logo {
+        font-family: 'Bebas Neue', sans-serif;
+        font-size: 1.6rem;
+        letter-spacing: 0.1em;
+        color: var(--accent);
+        margin-bottom: 0.4rem;
+    }
+    .auth-title {
+        font-family: 'Bebas Neue', sans-serif;
+        font-size: 2.4rem;
+        letter-spacing: 0.05em;
+        color: var(--text-primary);
+        margin: 0 0 0.4rem;
+        line-height: 1;
+    }
+    .auth-sub {
+        color: var(--text-muted);
+        font-size: 0.82rem;
+        margin-bottom: 2rem;
+        letter-spacing: 0.04em;
+    }
+    .form-group {
+        margin-bottom: 1.1rem;
+    }
+    .form-group label {
+        display: block;
+        font-size: 0.72rem;
+        letter-letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        margin-bottom: 0.45rem;
+    }
+    .form-group input {
+        width: 100%;
+        background: rgba(255,255,255,0.04);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        color: var(--text-primary);
+        font-size: 0.9rem;
+        padding: 0.7rem 1rem;
+        font-family: 'Noto Sans KR', sans-serif;
+        transition: all 0.2s;
+    }
+    .form-group input:focus {
+        outline: none;
+        border-color: var(--accent);
+        background: rgba(232,255,71,0.04);
+        box-shadow: 0 0 0 3px rgba(232,255,71,0.08);
+    }
+    .form-group input::placeholder { color: var(--text-muted); }
+    .form-help {
+        font-size: 0.7rem;
+        color: var(--text-muted);
+        margin-top: 0.35rem;
+        line-height: 1.5;
+    }
+    .field-error {
+        font-size: 0.72rem;
+        color: var(--pink);
+        margin-top: 0.3rem;
+    }
+    .btn-auth {
+        width: 100%;
+        background: var(--accent);
+        color: #000;
+        border: none;
+        border-radius: 12px;
+        padding: 0.8rem;
+        font-size: 0.9rem;
+        font-weight: 700;
+        font-family: 'Noto Sans KR', sans-serif;
+        letter-spacing: 0.05em;
+        cursor: pointer;
+        transition: all 0.2s;
+        margin-top: 0.5rem;
+    }
+    .btn-auth:hover {
+        background: var(--accent-dim);
+        transform: translateY(-1px);
+        box-shadow: 0 8px 24px rgba(232,255,71,0.25);
+    }
+    .auth-footer {
+        text-align: center;
+        font-size: 0.82rem;
+        color: var(--text-muted);
+        margin-top: 1.4rem;
+    }
+    .auth-footer a {
+        color: var(--accent);
+        text-decoration: none;
+        font-weight: 500;
+    }
+    .auth-footer a:hover { text-decoration: underline; }
+</style>
+
+<div class="auth-wrap">
+    <div class="auth-card">
+
+        <div class="auth-logo">CHARTWAVE</div>
+        <h1 class="auth-title">회원가입</h1>
+        <p class="auth-sub">지금 가입하고 음악을 즐겨보세요</p>
+
+        <form method="post">
+            {% csrf_token %}
+
+            <!-- USERNAME -->
+            <div class="form-group">
+                <label for="{{ form.username.id_for_label }}">아이디</label>
+                <input type="text"
+                       name="{{ form.username.html_name }}"
+                       id="{{ form.username.id_for_label }}"
+                       placeholder="사용할 아이디를 입력하세요"
+                       value="{{ form.username.value|default:'' }}">
+                {% if form.username.help_text %}
+                <p class="form-help">{{ form.username.help_text }}</p>
+                {% endif %}
+                {% for error in form.username.errors %}
+                <p class="field-error">{{ error }}</p>
+                {% endfor %}
+            </div>
+
+            <!-- EMAIL -->
+            <div class="form-group">
+                <label for="{{ form.email.id_for_label }}">이메일</label>
+                <input type="email"
+                       name="{{ form.email.html_name }}"
+                       id="{{ form.email.id_for_label }}"
+                       placeholder="이메일을 입력하세요"
+                       value="{{ form.email.value|default:'' }}">
+                {% for error in form.email.errors %}
+                <p class="field-error">{{ error }}</p>
+                {% endfor %}
+            </div>
+
+            <!-- PASSWORD1 -->
+            <div class="form-group">
+                <label for="{{ form.password1.id_for_label }}">비밀번호</label>
+                <input type="password"
+                       name="{{ form.password1.html_name }}"
+                       id="{{ form.password1.id_for_label }}"
+                       placeholder="비밀번호를 입력하세요">
+                {% if form.password1.help_text %}
+                <p class="form-help">{{ form.password1.help_text }}</p>
+                {% endif %}
+                {% for error in form.password1.errors %}
+                <p class="field-error">{{ error }}</p>
+                {% endfor %}
+            </div>
+
+            <!-- PASSWORD2 -->
+            <div class="form-group">
+                <label for="{{ form.password2.id_for_label }}">비밀번호 확인</label>
+                <input type="password"
+                       name="{{ form.password2.html_name }}"
+                       id="{{ form.password2.id_for_label }}"
+                       placeholder="비밀번호를 한 번 더 입력하세요">
+                {% for error in form.password2.errors %}
+                <p class="field-error">{{ error }}</p>
+                {% endfor %}
+            </div>
+
+            <!-- IS_ARTIST -->
+            <div class="form-group">
+                <label for="{{ form.is_artist.id_for_label }}">아티스트인가요?</label>
+                <input type="checkbox"
+                       name="{{ form.is_artist.html_name }}"
+                       id="{{ form.is_artist.id_for_label }}"
+                       {% if form.is_artist.value %}checked{% endif %}>
+                {% for error in form.is_artist.errors %}
+                <p class="field-error">{{ error }}</p>
+                {% endfor %}
+            </div>
+
+            <!-- NICKNAME -->
+            <div class="form-group">
+                <label for="{{ form.nickname.id_for_label }}">닉네임</label>
+                <input type="text"
+                       name="{{ form.nickname.html_name }}"
+                       id="{{ form.nickname.id_for_label }}"
+                       placeholder="닉네임을 입력하세요"
+                       value="{{ form.nickname.value|default:'' }}">
+                {% for error in form.nickname.errors %}
+                <p class="field-error">{{ error }}</p>
+                {% endfor %}
+            </div>
+
+            <button type="submit" class="btn-auth">가입하기</button>
+        </form>
+
+        <div class="auth-footer">
+            이미 계정이 있으신가요? <a href="{% url 'login' %}">로그인</a>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
