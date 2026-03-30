@@ -1,0 +1,301 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    /* ── 페이지 헤더 ── */
+    .page-header {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        margin-bottom: 2.5rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 1px solid var(--border);
+    }
+    .page-header-left h2 {
+        font-family: 'Bebas Neue', sans-serif;
+        font-size: 3rem;
+        letter-spacing: 0.06em;
+        color: var(--text-primary);
+        margin: 0;
+        line-height: 1;
+    }
+    .page-header-left h2 span {
+        color: var(--accent);
+    }
+    .page-header-left p {
+        color: var(--text-muted);
+        font-size: 0.82rem;
+        margin: 0.4rem 0 0;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+    }
+    .page-header-right {
+        display: flex;
+        gap: 0.5rem;
+    }
+    .filter-btn {
+        background: transparent;
+        border: 1px solid var(--border);
+        color: var(--text-muted);
+        border-radius: 20px;
+        padding: 0.35rem 1rem;
+        font-size: 0.78rem;
+        cursor: pointer;
+        font-family: 'Noto Sans KR', sans-serif;
+        transition: all 0.2s;
+        letter-spacing: 0.04em;
+    }
+    .filter-btn:hover,
+    .filter-btn.active {
+        border-color: var(--accent);
+        color: var(--accent);
+        background: rgba(232,255,71,0.06);
+    }
+
+    /* ── 카드 그리드 ── */
+    .music-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .music-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        overflow: hidden;
+        transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+        animation: fadeUp 0.5s ease both;
+        text-decoration: none;
+        display: block;
+        color: inherit;
+    }
+    .music-card:nth-child(1) { animation-delay: 0.05s; }
+    .music-card:nth-child(2) { animation-delay: 0.10s; }
+    .music-card:nth-child(3) { animation-delay: 0.15s; }
+    .music-card:nth-child(4) { animation-delay: 0.20s; }
+    .music-card:nth-child(5) { animation-delay: 0.25s; }
+    .music-card:nth-child(6) { animation-delay: 0.30s; }
+
+    @keyframes fadeUp {
+        from { opacity: 0; transform: translateY(24px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .music-card:hover {
+        transform: translateY(-6px);
+        border-color: rgba(232,255,71,0.3);
+        box-shadow: 0 16px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(232,255,71,0.1);
+    }
+
+    /* 커버 이미지 영역 */
+    .card-cover {
+        position: relative;
+        aspect-ratio: 1/1;
+        overflow: hidden;
+        background: linear-gradient(135deg, #1e1e30 0%, #0d0d1a 100%);
+    }
+    .card-cover img {
+        width: 100%; height: 100%;
+        object-fit: cover;
+        transition: transform 0.4s ease;
+    }
+    .music-card:hover .card-cover img {
+        transform: scale(1.06);
+    }
+
+    /* 커버 없을 때 플레이스홀더 */
+    .cover-placeholder {
+        width: 100%; height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3rem;
+        background: linear-gradient(135deg, #1e1e30 0%, #12122a 100%);
+    }
+
+    /* 랭킹 배지 */
+    .rank-badge {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        font-family: 'Bebas Neue', sans-serif;
+        font-size: 0.95rem;
+        letter-spacing: 0.05em;
+        background: rgba(0,0,0,0.7);
+        color: var(--accent);
+        padding: 2px 8px;
+        border-radius: 6px;
+        backdrop-filter: blur(4px);
+    }
+
+    /* 호버 오버레이 */
+    .card-overlay {
+        position: absolute;
+        inset: 0;
+        background: rgba(0,0,0,0.55);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transition: opacity 0.3s;
+    }
+    .music-card:hover .card-overlay { opacity: 1; }
+    .play-icon {
+        width: 52px; height: 52px;
+        background: var(--accent);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transform: scale(0.8);
+        transition: transform 0.3s;
+    }
+    .music-card:hover .play-icon { transform: scale(1); }
+    .play-icon svg { color: #000; margin-left: 3px; }
+
+    /* 카드 정보 */
+    .card-info {
+        padding: 1rem 1.1rem 1.2rem;
+    }
+    .card-info .song-title {
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 0 0 0.25rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .card-info .song-genre {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        margin: 0 0 0.75rem;
+    }
+    .card-info .genre-tag {
+        display: inline-block;
+        background: rgba(232,255,71,0.1);
+        color: var(--accent);
+        border: 1px solid rgba(232,255,71,0.2);
+        border-radius: 10px;
+        font-size: 0.68rem;
+        padding: 2px 8px;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+    }
+
+    /* ── 빈 상태 ── */
+    .empty-state {
+        grid-column: 1 / -1;
+        text-align: center;
+        padding: 5rem 2rem;
+        color: var(--text-muted);
+    }
+    .empty-state .empty-icon { font-size: 3.5rem; margin-bottom: 1rem; }
+    .empty-state p { font-size: 0.9rem; letter-spacing: 0.05em; }
+
+    /* ── HOT 배너 ── */
+    .hot-banner {
+        background: linear-gradient(135deg, rgba(255,77,141,0.12) 0%, rgba(232,255,71,0.08) 100%);
+        border: 1px solid rgba(255,77,141,0.2);
+        border-radius: 16px;
+        padding: 1.2rem 1.8rem;
+        margin-bottom: 2rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    .hot-banner .label {
+        font-family: 'Bebas Neue', sans-serif;
+        font-size: 1rem;
+        letter-spacing: 0.1em;
+        color: var(--pink);
+        white-space: nowrap;
+    }
+    .hot-banner .bar-wrap {
+        flex: 1;
+        height: 3px;
+        background: var(--border);
+        border-radius: 2px;
+        overflow: hidden;
+    }
+    .hot-banner .bar-fill {
+        height: 100%;
+        width: 72%;
+        background: linear-gradient(90deg, var(--pink), var(--accent));
+        border-radius: 2px;
+        animation: grow 1.2s ease both 0.4s;
+        transform-origin: left;
+    }
+    @keyframes grow {
+        from { transform: scaleX(0); }
+        to   { transform: scaleX(1); }
+    }
+    .hot-banner .note {
+        font-size: 0.78rem;
+        color: var(--text-muted);
+        white-space: nowrap;
+    }
+</style>
+
+<!-- 헤더 -->
+<div class="page-header">
+    <div class="page-header-left">
+        <h2>최신 <span>음악</span></h2>
+        <p>지금 가장 핫한 트랙들</p>
+    </div>
+    <div class="page-header-right">
+        <button class="filter-btn active">전체</button>
+        <button class="filter-btn">K-POP</button>
+        <button class="filter-btn">힙합</button>
+        <button class="filter-btn">발라드</button>
+        <button class="filter-btn">팝</button>
+    </div>
+</div>
+
+<!-- HOT 배너 -->
+<div class="hot-banner">
+    <span class="label">🔥 HOT NOW</span>
+    <div class="bar-wrap"><div class="bar-fill"></div></div>
+    <span class="note">실시간 업데이트 중</span>
+</div>
+
+<!-- 음악 그리드 -->
+<div class="music-grid">
+    {% for music in music_list %}
+    <a href="/music/{{ music.id }}/" class="music-card">
+        <div class="card-cover">
+            {% if music.cover_image %}
+            <img src="{{ music.cover_image.url }}" alt="{{ music.title }}">
+            {% else %}
+            <div class="cover-placeholder">🎵</div>
+            {% endif %}
+
+            <div class="rank-badge">#{{ forloop.counter }}</div>
+
+            <div class="card-overlay">
+                <div class="play-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="m11.596 8.697-6.363 3.692c-.54.313-1.233-.066-1.233-.697V4.308c0-.63.692-1.01 1.233-.696l6.363 3.692a.802.802 0 0 1 0 1.393"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-info">
+            <p class="song-title">{{ music.title }}</p>
+            <p class="song-genre">
+                <span class="genre-tag">{{ music.genre }}</span>
+            </p>
+        </div>
+    </a>
+    {% empty %}
+    <div class="empty-state">
+        <div class="empty-icon">🎸</div>
+        <p>아직 업로드된 음악이 없습니다.</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

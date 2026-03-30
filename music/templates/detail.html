@@ -1,0 +1,466 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    /* ── 뒤로가기 ── */
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: var(--text-muted);
+        text-decoration: none;
+        font-size: 0.82rem;
+        letter-spacing: 0.05em;
+        margin-bottom: 2.5rem;
+        transition: color 0.2s;
+    }
+    .back-link:hover { color: var(--accent); }
+
+    /* ── 디테일 레이아웃 ── */
+    .detail-layout {
+        display: grid;
+        grid-template-columns: 340px 1fr;
+        gap: 3rem;
+        align-items: start;
+        animation: fadeIn 0.5s ease;
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── 커버 패널 ── */
+    .cover-panel {
+        position: sticky;
+        top: calc(var(--nav-h) + 2rem);
+    }
+    .cover-box {
+        position: relative;
+        aspect-ratio: 1/1;
+        border-radius: 20px;
+        overflow: hidden;
+        background: linear-gradient(135deg, #1e1e30, #0d0d1a);
+        box-shadow: 0 30px 80px rgba(0,0,0,0.6), 0 0 0 1px var(--border);
+    }
+    .cover-box img {
+        width: 100%; height: 100%;
+        object-fit: cover;
+    }
+    .cover-placeholder-lg {
+        width: 100%; height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 6rem;
+    }
+    /* 커버 아래 그림자 반사 */
+    .cover-reflection {
+        height: 60px;
+        background: inherit;
+        filter: blur(20px);
+        opacity: 0.3;
+        margin-top: -10px;
+        border-radius: 0 0 20px 20px;
+        transform: scaleY(-1);
+        overflow: hidden;
+    }
+
+    /* 재생 상태 바 */
+    .now-playing-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: rgba(232,255,71,0.1);
+        border: 1px solid rgba(232,255,71,0.25);
+        border-radius: 20px;
+        padding: 0.35rem 0.9rem;
+        margin-top: 1.2rem;
+        font-size: 0.75rem;
+        color: var(--accent);
+        letter-spacing: 0.06em;
+    }
+    .bars {
+        display: flex;
+        gap: 2px;
+        align-items: flex-end;
+        height: 14px;
+    }
+    .bars span {
+        width: 3px;
+        background: var(--accent);
+        border-radius: 2px;
+        animation: bar-dance 0.8s ease-in-out infinite alternate;
+    }
+    .bars span:nth-child(2) { animation-delay: 0.15s; }
+    .bars span:nth-child(3) { animation-delay: 0.30s; }
+    .bars span:nth-child(4) { animation-delay: 0.45s; }
+    @keyframes bar-dance {
+        from { height: 4px; }
+        to   { height: 14px; }
+    }
+
+    /* ── 정보 패널 ── */
+    .info-panel {}
+
+    .genre-tag-lg {
+        display: inline-block;
+        background: rgba(77,159,255,0.12);
+        color: var(--blue);
+        border: 1px solid rgba(77,159,255,0.25);
+        border-radius: 10px;
+        font-size: 0.72rem;
+        padding: 3px 10px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        margin-bottom: 1rem;
+    }
+
+    .song-title-lg {
+        font-family: 'Bebas Neue', sans-serif;
+        font-size: 3.5rem;
+        letter-spacing: 0.04em;
+        line-height: 1.05;
+        margin: 0 0 1rem;
+        color: var(--text-primary);
+    }
+
+    .description-box {
+        background: rgba(255,255,255,0.03);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 1.2rem 1.4rem;
+        margin-bottom: 2rem;
+        font-size: 0.88rem;
+        color: var(--text-muted);
+        line-height: 1.75;
+    }
+
+    /* ── 오디오 플레이어 ── */
+    .player-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: 1.8rem;
+        margin-bottom: 1.5rem;
+    }
+    .player-label {
+        font-size: 0.7rem;
+        color: var(--text-muted);
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        margin-bottom: 1.2rem;
+    }
+
+    /* 커스텀 오디오 플레이어 */
+    .custom-player { width: 100%; }
+
+    /* 진행바 */
+    .progress-wrap {
+        position: relative;
+        height: 4px;
+        background: rgba(255,255,255,0.08);
+        border-radius: 2px;
+        cursor: pointer;
+        margin: 1rem 0 0.5rem;
+    }
+    .progress-fill {
+        height: 100%;
+        width: 0%;
+        background: linear-gradient(90deg, var(--accent), var(--pink));
+        border-radius: 2px;
+        transition: width 0.1s linear;
+        position: relative;
+    }
+    .progress-fill::after {
+        content: '';
+        position: absolute;
+        right: -5px;
+        top: -4px;
+        width: 12px; height: 12px;
+        background: var(--accent);
+        border-radius: 50%;
+        box-shadow: 0 0 0 3px rgba(232,255,71,0.25);
+    }
+
+    .time-row {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.72rem;
+        color: var(--text-muted);
+        margin-bottom: 1.2rem;
+        letter-spacing: 0.04em;
+    }
+
+    .controls {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    .ctrl-btn {
+        background: none;
+        border: none;
+        color: var(--text-muted);
+        cursor: pointer;
+        padding: 0.4rem;
+        border-radius: 8px;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+    }
+    .ctrl-btn:hover { color: var(--text-primary); background: rgba(255,255,255,0.06); }
+
+    .play-btn-lg {
+        width: 52px; height: 52px;
+        background: var(--accent);
+        color: #000;
+        border: none;
+        border-radius: 50%;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
+        margin: 0 0.25rem;
+        flex-shrink: 0;
+    }
+    .play-btn-lg:hover {
+        background: var(--accent-dim);
+        transform: scale(1.08);
+        box-shadow: 0 0 20px rgba(232,255,71,0.35);
+    }
+
+    .volume-wrap {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        margin-left: auto;
+    }
+    .volume-slider {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 80px;
+        height: 3px;
+        background: rgba(255,255,255,0.12);
+        border-radius: 2px;
+        outline: none;
+        cursor: pointer;
+    }
+    .volume-slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 12px; height: 12px;
+        border-radius: 50%;
+        background: var(--accent);
+        cursor: pointer;
+    }
+
+    /* 숨겨진 기본 audio */
+    #native-audio { display: none; }
+
+    /* ── 액션 버튼 ── */
+    .action-row {
+        display: flex;
+        gap: 0.75rem;
+    }
+    .btn-outline-chart {
+        flex: 1;
+        background: transparent;
+        border: 1px solid var(--border);
+        color: var(--text-muted);
+        border-radius: 12px;
+        padding: 0.65rem 1rem;
+        font-size: 0.82rem;
+        cursor: pointer;
+        font-family: 'Noto Sans KR', sans-serif;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.4rem;
+        text-decoration: none;
+    }
+    .btn-outline-chart:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+        background: rgba(232,255,71,0.05);
+    }
+
+    @media (max-width: 768px) {
+        .detail-layout {
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+        .cover-panel { position: static; }
+        .song-title-lg { font-size: 2.5rem; }
+    }
+</style>
+
+<!-- 뒤로가기 -->
+<a href="/music/" class="back-link">
+    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+        <path fill-rule="evenodd" d="M11.354 1.646a.5.5 0 0 1 0 .708L5.707 8l5.647 5.646a.5.5 0 0 1-.708.708l-6-6a.5.5 0 0 1 0-.708l6-6a.5.5 0 0 1 .708 0"/>
+    </svg>
+    차트로 돌아가기
+</a>
+
+<div class="detail-layout">
+    <!-- 커버 -->
+    <div class="cover-panel">
+        <div class="cover-box">
+            {% if music.cover_image %}
+            <img src="{{ music.cover_image.url }}" alt="{{ music.title }}">
+            {% else %}
+            <div class="cover-placeholder-lg">🎵</div>
+            {% endif %}
+        </div>
+        <div class="now-playing-pill">
+            <div class="bars">
+                <span></span><span></span><span></span><span></span>
+            </div>
+            NOW PLAYING
+        </div>
+    </div>
+
+    <!-- 정보 + 플레이어 -->
+    <div class="info-panel">
+        <span class="genre-tag-lg">{{ music.genre }}</span>
+        <h1 class="song-title-lg">{{ music.title }}</h1>
+
+        {% if music.description %}
+        <div class="description-box">
+            {{ music.description }}
+        </div>
+        {% endif %}
+
+        <!-- 플레이어 -->
+        <div class="player-card">
+            <div class="player-label">▶ 재생하기</div>
+
+            <audio id="native-audio" src="{{ music.audio_file.url }}"></audio>
+
+            <div class="custom-player">
+                <div class="progress-wrap" id="progress-wrap">
+                    <div class="progress-fill" id="progress-fill"></div>
+                </div>
+                <div class="time-row">
+                    <span id="time-current">0:00</span>
+                    <span id="time-total">0:00</span>
+                </div>
+                <div class="controls">
+                    <!-- 이전 -->
+                    <button class="ctrl-btn" title="이전">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M.5 3.5A.5.5 0 0 1 1 4v3.248l6.267-3.636c.52-.302 1.233.043 1.233.696v2.94l6.267-3.636c.52-.302 1.233.043 1.233.696v7.384c0 .653-.713.998-1.233.696L8.5 8.752v2.94c0 .653-.713.998-1.233.696L1 8.752V12a.5.5 0 0 1-1 0V4a.5.5 0 0 1 .5-.5"/>
+                        </svg>
+                    </button>
+                    <!-- 재생/일시정지 -->
+                    <button class="play-btn-lg" id="play-btn">
+                        <svg id="icon-play" xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="m11.596 8.697-6.363 3.692c-.54.313-1.233-.066-1.233-.697V4.308c0-.63.692-1.01 1.233-.696l6.363 3.692a.802.802 0 0 1 0 1.393"/>
+                        </svg>
+                        <svg id="icon-pause" xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="currentColor" viewBox="0 0 16 16" style="display:none">
+                            <path d="M5.5 3.5A1.5 1.5 0 0 1 7 5v6a1.5 1.5 0 0 1-3 0V5a1.5 1.5 0 0 1 1.5-1.5m5 0A1.5 1.5 0 0 1 12 5v6a1.5 1.5 0 0 1-3 0V5a1.5 1.5 0 0 1 1.5-1.5"/>
+                        </svg>
+                    </button>
+                    <!-- 다음 -->
+                    <button class="ctrl-btn" title="다음">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M15.5 3.5a.5.5 0 0 1 .5.5v8a.5.5 0 0 1-1 0V8.752l-6.267 3.636c-.52.302-1.233-.043-1.233-.696v-2.94l-6.267 3.636C.713 12.69 0 12.345 0 11.692V4.308c0-.653.713-.998 1.233-.696L7.5 7.248v-2.94c0-.653.713-.998 1.233-.696L15 7.248V4a.5.5 0 0 1 .5-.5"/>
+                        </svg>
+                    </button>
+                    <!-- 볼륨 -->
+                    <div class="volume-wrap">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" color="var(--text-muted)" viewBox="0 0 16 16">
+                            <path d="M11.536 14.01A8.47 8.47 0 0 0 14.026 8a8.47 8.47 0 0 0-2.49-6.01l-.708.707A7.48 7.48 0 0 1 13.025 8c0 2.071-.84 3.946-2.197 5.303z"/>
+                            <path d="M10.121 12.596A6.48 6.48 0 0 0 12.025 8a6.48 6.48 0 0 0-1.904-4.596l-.707.707A5.48 5.48 0 0 1 11.025 8a5.48 5.48 0 0 1-1.61 3.89z"/>
+                            <path d="M8.707 11.182A4.5 4.5 0 0 0 10.025 8a4.5 4.5 0 0 0-1.318-3.182L8 5.525A3.5 3.5 0 0 1 9.025 8 3.5 3.5 0 0 1 8 10.475zM6.717 3.55A.5.5 0 0 1 7 4v8a.5.5 0 0 1-.812.39L3.825 10.5H1.5A.5.5 0 0 1 1 10V6a.5.5 0 0 1 .5-.5h2.325l2.363-1.89a.5.5 0 0 1 .529-.06"/>
+                        </svg>
+                        <input type="range" class="volume-slider" id="volume-slider" min="0" max="1" step="0.01" value="1">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 액션 -->
+        <div class="action-row">
+            <button class="btn-outline-chart">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M8 1.314C12.438-3.248 23.534 4.735 8 15-7.534 4.736 3.562-3.248 8 1.314"/>
+                </svg>
+                좋아요
+            </button>
+            <button class="btn-outline-chart">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M11 2.5a2.5 2.5 0 1 1 .603 1.628l-6.718 3.12a2.499 2.499 0 0 1 0 1.504l6.718 3.12a2.5 2.5 0 1 1-.488.876l-6.718-3.12a2.5 2.5 0 1 1 0-3.256l6.718-3.12A2.5 2.5 0 0 1 11 2.5"/>
+                </svg>
+                공유하기
+            </button>
+            <a href="{{ music.audio_file.url }}" download class="btn-outline-chart">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5"/>
+                    <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708z"/>
+                </svg>
+                다운로드
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+(function () {
+    const audio = document.getElementById('native-audio');
+    const playBtn = document.getElementById('play-btn');
+    const iconPlay = document.getElementById('icon-play');
+    const iconPause = document.getElementById('icon-pause');
+    const progressFill = document.getElementById('progress-fill');
+    const progressWrap = document.getElementById('progress-wrap');
+    const timeCurrent = document.getElementById('time-current');
+    const timeTotal = document.getElementById('time-total');
+    const volumeSlider = document.getElementById('volume-slider');
+
+    function fmt(s) {
+        const m = Math.floor(s / 60);
+        const sec = Math.floor(s % 60);
+        return m + ':' + (sec < 10 ? '0' : '') + sec;
+    }
+
+    audio.addEventListener('loadedmetadata', () => {
+        timeTotal.textContent = fmt(audio.duration);
+    });
+
+    audio.addEventListener('timeupdate', () => {
+        if (!audio.duration) return;
+        const pct = (audio.currentTime / audio.duration) * 100;
+        progressFill.style.width = pct + '%';
+        timeCurrent.textContent = fmt(audio.currentTime);
+    });
+
+    playBtn.addEventListener('click', () => {
+        if (audio.paused) {
+            audio.play();
+            iconPlay.style.display = 'none';
+            iconPause.style.display = '';
+        } else {
+            audio.pause();
+            iconPlay.style.display = '';
+            iconPause.style.display = 'none';
+        }
+    });
+
+    audio.addEventListener('ended', () => {
+        iconPlay.style.display = '';
+        iconPause.style.display = 'none';
+        progressFill.style.width = '0%';
+    });
+
+    progressWrap.addEventListener('click', (e) => {
+        const rect = progressWrap.getBoundingClientRect();
+        const ratio = (e.clientX - rect.left) / rect.width;
+        audio.currentTime = ratio * audio.duration;
+    });
+
+    volumeSlider.addEventListener('input', () => {
+        audio.volume = volumeSlider.value;
+    });
+})();
+</script>
+{% endblock %}

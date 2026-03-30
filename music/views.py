@@ -1,4 +1,5 @@
 from django.shortcuts import render
+from django.views import View
 from rest_framework import permissions, generics
 from rest_framework.exceptions import PermissionDenied
 from .models import Music
@@ -19,3 +20,14 @@ class MusicUploadView(generics.CreateAPIView):
 
 # 업로드를 하면 그대로 music 모델에 저장되어 늘어남
 # serializer에 save를 하는데 왜? -> serializers.py에서 model=Music 을 하기 때문에 save하면 music 모델이 추가가 된다.
+
+
+class MusicDetailView(View):
+    def get(self, request, id):
+        music = Music.objects.get(id=id)
+        return render(request, "detail.html", {"music": music})
+
+class MusicListView(View):
+    def get(self, request):
+        music_list = Music.objects.all().order_by('-created_at')
+        return render(request, "list.html", {"music_list": music_list})
