@@ -183,18 +183,6 @@
                 {% endfor %}
             </div>
 
-            <!-- IS_ARTIST -->
-            <div class="form-group">
-                <label for="{{ form.is_artist.id_for_label }}">아티스트인가요?</label>
-                <input type="checkbox"
-                       name="{{ form.is_artist.html_name }}"
-                       id="{{ form.is_artist.id_for_label }}"
-                       {% if form.is_artist.value %}checked{% endif %}>
-                {% for error in form.is_artist.errors %}
-                <p class="field-error">{{ error }}</p>
-                {% endfor %}
-            </div>
-
             <!-- NICKNAME -->
             <div class="form-group">
                 <label for="{{ form.nickname.id_for_label }}">닉네임</label>

@@ -265,7 +265,7 @@
 <!-- 음악 그리드 -->
 <div class="music-grid">
     {% for music in music_list %}
-    <a href="/music/{{ music.id }}/" class="music-card">
+    <a href="{% url 'music-detail' music.id %}" class="music-card">
         <div class="card-cover">
             {% if music.cover_image %}
             <img src="{{ music.cover_image.url }}" alt="{{ music.title }}">
