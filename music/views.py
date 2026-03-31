@@ -36,7 +36,14 @@ class MusicUploadView(LoginRequiredMixin, View):
         return render(request, "upload.html", context)
 
     def post(self, request):
-        return
+        form = MusicUploadForm(request.POST, request.FILES)
+        if form.is_valid():
+            music = form.save(commit=False)   # DB 저장 보류
+            music.artist = request.user  # artist는 유저에서 가져오므로 직접 지정
+            music.save()
+            return render(request, 'detail.html', {"music": music})
+        else:
+            return render(request, "upload.html", {"form": form})
 
 
 class MusicDetailView(View):
