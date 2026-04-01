@@ -4,7 +4,7 @@ from django.views import View
 from rest_framework import permissions, generics
 from rest_framework.exceptions import PermissionDenied
 
-from .forms import MusicUploadForm
+from .forms import MusicUploadForm, GENRE_CHOICES
 from .models import Music
 from django.db.models import Count, F, ExpressionWrapper, IntegerField
 from .serializers import MusicSerializer
@@ -79,4 +79,21 @@ class ChartView(View):
             )
         ).order_by('-score')
 
-        return render(request, 'chart.html', {'musics': musics})
+        return render(request, 'chart.html', {'musics': musics, "genres" : GENRE_CHOICES})
+
+
+class GenreChartView(View):
+    def get(self, request, genre):
+        musics = Music.objects.filter(genre=genre).annotate(
+            like_count=Count('likes'),
+            score=ExpressionWrapper(
+                F('like_count') * 3 + F('play_count'),
+                output_field=IntegerField()
+            )
+        ).order_by('-score')
+
+        return render(request, "chart.html", {
+            "genre": genre,
+            "musics": musics,
+            "genres": GENRE_CHOICES,
+        })
