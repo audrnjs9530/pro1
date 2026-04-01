@@ -284,6 +284,27 @@
         background: rgba(232,255,71,0.05);
     }
 
+    .btn-liked{
+        flex: 1;
+        background: transparent;
+        border: 1px solid var(--border);
+        color: var(--text-muted);
+        border-radius: 12px;
+        padding: 0.65rem 1rem;
+        font-size: 0.82rem;
+        cursor: pointer;
+        font-family: 'Noto Sans KR', sans-serif;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.4rem;
+        text-decoration: none;
+        border-color: var(--accent);
+        color: var(--accent);
+        background: rgba(232,255,71,0.05);
+    }
+
     @media (max-width: 768px) {
         .detail-layout {
             grid-template-columns: 1fr;
@@ -325,6 +346,7 @@
         <span class="genre-tag-lg">{{ music.genre }}</span>
         <h1 class="song-title-lg">{{ music.title }}</h1>
         <p class="">{{ music.artist }}</p>
+        <p>{{ music.play_count }}</p>
 
         {% if music.description %}
         <div class="description-box">
@@ -383,12 +405,16 @@
 
         <!-- 액션 -->
         <div class="action-row">
-            <button class="btn-outline-chart">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
-                    <path d="M8 1.314C12.438-3.248 23.534 4.735 8 15-7.534 4.736 3.562-3.248 8 1.314"/>
-                </svg>
-                좋아요
-            </button>
+            <form action="{% url 'music-like' music.id %}" method="post">
+                {% csrf_token %}
+                <button class="{% if not is_liked %}btn-outline-chart{% else %}btn-liked{% endif %}" id="like-btn" data-id="{{ music.id }}" type="submit">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M8 1.314C12.438-3.248 23.534 4.735 8 15-7.534 4.736 3.562-3.248 8 1.314"/>
+                    </svg>
+                    좋아요{{ like_count }}
+                </button>
+            </form>
+            <span>{{ music.musiclike_set.count }}</span>
             <button class="btn-outline-chart">
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
                     <path d="M11 2.5a2.5 2.5 0 1 1 .603 1.628l-6.718 3.12a2.499 2.499 0 0 1 0 1.504l6.718 3.12a2.5 2.5 0 1 1-.488.876l-6.718-3.12a2.5 2.5 0 1 1 0-3.256l6.718-3.12A2.5 2.5 0 0 1 11 2.5"/>
@@ -463,5 +489,6 @@
         audio.volume = volumeSlider.value;
     });
 })();
+
 </script>
 {% endblock %}

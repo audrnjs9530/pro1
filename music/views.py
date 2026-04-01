@@ -1,28 +1,14 @@
-from django.shortcuts import render
+from django.http import JsonResponse
+from django.shortcuts import render, get_object_or_404
 from django.views import View
 from rest_framework import permissions, generics
 from rest_framework.exceptions import PermissionDenied
 
 from .forms import MusicUploadForm
 from .models import Music
+from django.db.models import Count, F, ExpressionWrapper, IntegerField
 from .serializers import MusicSerializer
 from django.contrib.auth.mixins import LoginRequiredMixin
-
-# Create your views here.
-# class MusicUploadView(generics.CreateAPIView):
-#     queryset = Music.objects.all()
-#     serializer_class = MusicSerializer
-#     permission_classes = [permissions.IsAuthenticated]
-#
-#                 #              serializer_class의 값
-#     def perform_create(self, serializer):
-#         user = self.request.user
-#         if not user.is_artist:
-#             raise PermissionDenied('아티스트 계정만 업로드 가능합니다.')
-#         serializer.save(artist=user)
-
-# 업로드를 하면 그대로 music 모델에 저장되어 늘어남
-# serializer에 save를 하는데 왜? -> serializers.py에서 model=Music 을 하기 때문에 save하면 music 모델이 추가가 된다.
 
 
 class MusicUploadView(LoginRequiredMixin, View):
@@ -49,9 +35,48 @@ class MusicUploadView(LoginRequiredMixin, View):
 class MusicDetailView(View):
     def get(self, request, id):
         music = Music.objects.get(id=id)
-        return render(request, "detail.html", {"music": music})
+        is_liked = music.likes.filter(id=request.user.id).exists()
+        session_key = f"viewed_music_{id}"
+        if not request.session.get(session_key):
+            music.play_count += 1
+            music.save(update_fields=["play_count"])
+            request.session[session_key] = True
+
+            request.session.set_expiry(30)
+
+        context = {'music': music, 'is_liked': is_liked}
+
+        return render(request, "detail.html", context)
 
 class MusicListView(View):
     def get(self, request):
         music_list = Music.objects.all().order_by('-created_at')
         return render(request, "list.html", {"music_list": music_list})
+
+
+class MusicLikeView(LoginRequiredMixin ,View):
+    login_url = '/accounts/login/'
+    def post(self, request, id):
+        music = get_object_or_404(Music, id=id)
+        if request.user in music.likes.all():
+            music.likes.remove(request.user)  # 취소
+        else:
+            music.likes.add(request.user)
+
+        is_liked = music.likes.filter(id=request.user.id).exists()
+        like_count = music.likes.count()
+        context = {'music': music, 'is_liked': is_liked, 'like_count': like_count}
+        return render(request, 'detail.html', context)
+
+
+class ChartView(View):
+    def get(self, request, *args, **kwargs):
+        musics = Music.objects.annotate(
+            like_count=Count('likes'),
+            score=ExpressionWrapper(
+                F('like_count') * 3 + F('play_count'),
+                output_field=IntegerField()
+            )
+        ).order_by('-score')
+
+        return render(request, 'chart.html', {'musics': musics})

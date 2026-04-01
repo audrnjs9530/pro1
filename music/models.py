@@ -1,5 +1,6 @@
 from django.db import models
 from django.conf import settings
+from accounts.models import User
 
 
 
@@ -20,5 +21,18 @@ class Music(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
 
+    likes = models.ManyToManyField(
+        settings.AUTH_USER_MODEL,
+        related_name='liked_musics',
+        blank=True,
+    )
+
+    @property
+    def points(self):
+        return self.likes.count() * 3 + self.play_count
+
     def __str__(self):
         return f"{self.title} - {self.artist.username}"
+
+
+

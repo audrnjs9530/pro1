@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container" style="max-width: 800px; margin-top: 50px;">
+    <h2 style="text-align:center; margin-bottom:20px;">음악 좋아요 차트 TOP 10</h2>
+
+    <!-- Chart Container -->
+    <canvas id="likeChart"></canvas>
+</div>
+
+<ol>
+{% for music in musics %}
+    <li>
+        {{ forloop.counter }}위 :
+        {{ music.title }} / {{ music.score }})
+    </li>
+{% endfor %}
+</ol>
+
+{% endblock %}
