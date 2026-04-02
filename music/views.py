@@ -11,13 +11,27 @@ from .serializers import MusicSerializer
 from django.contrib.auth.mixins import LoginRequiredMixin
 
 
+def get_chart_queryset(genre=None):
+    queryset = Music.objects.all()
+    if genre:
+        queryset = queryset.filter(genre=genre)
+
+    return queryset.annotate(
+        like_count=Count('likes'),
+        score=ExpressionWrapper(
+            F('like_count') * 3 + F('play_count'),
+            output_field=IntegerField()
+        )
+    ).order_by('-score')
+
+
 class MusicUploadView(LoginRequiredMixin, View):
     login_url = '/accounts/login/'
 
 
     def get(self, request):
         context = {
-            'form': MusicUploadForm,
+            'form': MusicUploadForm(),
         }
         return render(request, "upload.html", context)
 
@@ -34,8 +48,8 @@ class MusicUploadView(LoginRequiredMixin, View):
 
 class MusicDetailView(View):
     def get(self, request, id):
-        music = Music.objects.get(id=id)
-        is_liked = music.likes.filter(id=request.user.id).exists()
+        music = get_object_or_404(Music, id=id)
+        is_liked = request.user.is_authenticated and music.likes.filter(id=request.user.id).exists()
         session_key = f"viewed_music_{id}"
         if not request.session.get(session_key):
             music.play_count += 1
@@ -44,7 +58,11 @@ class MusicDetailView(View):
 
             request.session.set_expiry(30)
 
-        context = {'music': music, 'is_liked': is_liked}
+        context = {
+            'music': music,
+            'is_liked': is_liked,
+            'like_count': music.likes.count(),
+        }
 
         return render(request, "detail.html", context)
 
@@ -71,26 +89,14 @@ class MusicLikeView(LoginRequiredMixin ,View):
 
 class ChartView(View):
     def get(self, request, *args, **kwargs):
-        musics = Music.objects.annotate(
-            like_count=Count('likes'),
-            score=ExpressionWrapper(
-                F('like_count') * 3 + F('play_count'),
-                output_field=IntegerField()
-            )
-        ).order_by('-score')
+        musics = get_chart_queryset()
 
         return render(request, 'chart.html', {'musics': musics, "genres" : GENRE_CHOICES})
 
 
 class GenreChartView(View):
     def get(self, request, genre):
-        musics = Music.objects.filter(genre=genre).annotate(
-            like_count=Count('likes'),
-            score=ExpressionWrapper(
-                F('like_count') * 3 + F('play_count'),
-                output_field=IntegerField()
-            )
-        ).order_by('-score')
+        musics = get_chart_queryset(genre=genre)
 
         return render(request, "chart.html", {
             "genre": genre,

@@ -1,15 +1,25 @@
 {% extends 'base.html' %}
+{% load static %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/upload.css' %}">
+{% endblock %}
 
 
 {% block content %}
-<form action="{% url 'music-upload' %}" method="post" class="create-form" enctype="multipart/form-data">
-            {% csrf_token %}
-            {{ form.as_p }}
-            <button type="submit" class="btn btn-primary">
-                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
-                작성하기
-            </button>
-</form>
+<div class="upload-form-wrap">
+    <div class="upload-header">
+        <h1>Track Upload</h1>
+        <p>새 음악을 등록하고 차트에 올려보세요.</p>
+    </div>
+    <form action="{% url 'music-upload' %}" method="post" class="create-form" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-primary">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+            작성하기
+        </button>
+    </form>
+</div>
 
 {% endblock %}
